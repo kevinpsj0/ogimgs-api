@@ -1,5 +1,4 @@
 /* eslint-disable @next/next/no-img-element */
-import { type CSSProperties } from "react";
 
 interface BlogTemplateProps {
   title: string;
@@ -53,42 +52,38 @@ export function BlogTemplate({
 
   const authorInitial = author ? author.charAt(0).toUpperCase() : "A";
 
-  const containerStyle: CSSProperties = {
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "space-between",
-    width: "100%",
-    height: "100%",
-    backgroundColor: bg,
-    fontFamily: "Georgia, 'Times New Roman', serif",
-    position: "relative",
-  };
-
   return (
-    <div style={containerStyle}>
-      {/* Subtle top stripe */}
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        width: "100%",
+        height: "100%",
+        backgroundColor: bg,
+        fontFamily: "Georgia, 'Times New Roman', serif",
+      }}
+    >
+      {/* Top colored strip — 6px tall, full width, linear-gradient */}
       <div
         style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 4,
-          backgroundImage: `linear-gradient(90deg, ${accentColor} 0%, ${accentColor}88 60%, transparent 100%)`,
           display: "flex",
+          height: 6,
+          width: "100%",
+          backgroundImage: `linear-gradient(90deg, ${accentColor} 0%, ${accentColor}88 60%, transparent 100%)`,
+          flexShrink: 0,
         }}
       />
 
-      {/* Top section */}
+      {/* Category tag + reading time row */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "52px 72px 0 72px",
+          padding: "46px 72px 0 72px",
         }}
       >
-        {/* Category tag */}
+        {/* Category pill */}
         <div
           style={{
             display: "flex",
@@ -112,24 +107,21 @@ export function BlogTemplate({
           </span>
         </div>
 
-        {/* Reading time */}
         {readingTime && (
-          <div style={{ display: "flex", alignItems: "center" }}>
-            <span
-              style={{
-                fontSize: 16,
-                color: muted,
-                fontFamily: "system-ui, sans-serif",
-                fontWeight: 400,
-              }}
-            >
-              {readingTime} min read
-            </span>
-          </div>
+          <span
+            style={{
+              fontSize: 16,
+              color: muted,
+              fontFamily: "system-ui, sans-serif",
+              fontWeight: 400,
+            }}
+          >
+            {readingTime} min read
+          </span>
         )}
       </div>
 
-      {/* Title area */}
+      {/* Title area — fills remaining space */}
       <div
         style={{
           display: "flex",
@@ -141,7 +133,8 @@ export function BlogTemplate({
       >
         <h1
           style={{
-            fontSize: title.length > 60 ? 46 : title.length > 40 ? 54 : 64,
+            fontSize:
+              title.length > 60 ? 46 : title.length > 40 ? 54 : 64,
             fontWeight: 700,
             color: text,
             lineHeight: 1.12,
@@ -175,14 +168,13 @@ export function BlogTemplate({
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          padding: "0 72px 48px 72px",
+          padding: "28px 72px 48px 72px",
           borderTop: `1px solid ${divider}`,
-          marginTop: 0,
-          paddingTop: 28,
         }}
       >
+        {/* Left: avatar + author info */}
         <div style={{ display: "flex", alignItems: "center" }}>
-          {/* Author avatar */}
+          {/* Author avatar circle */}
           <div
             style={{
               display: "flex",
@@ -243,38 +235,51 @@ export function BlogTemplate({
           </div>
         </div>
 
-        {/* Logo or publication mark */}
-        {logo ? (
-          <img src={logo} alt="" width={36} height={36} style={{ borderRadius: 8, opacity: 0.7 }} />
-        ) : (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              opacity: 0.25,
-            }}
-          >
-            <div style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: text, display: "flex" }} />
-          </div>
-        )}
-      </div>
+        {/* Right: logo mark or watermark */}
+        <div style={{ display: "flex", alignItems: "center" }}>
+          {logo ? (
+            <img
+              src={logo}
+              alt=""
+              width={36}
+              height={36}
+              style={{ borderRadius: 8, opacity: 0.7 }}
+            />
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                opacity: 0.25,
+              }}
+            >
+              <div
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  backgroundColor: text,
+                  display: "flex",
+                }}
+              />
+            </div>
+          )}
 
-      {showWatermark && (
-        <div
-          style={{
-            position: "absolute",
-            bottom: 16,
-            right: 28,
-            fontSize: 12,
-            color: muted,
-            fontFamily: "system-ui, sans-serif",
-            display: "flex",
-            opacity: 0.4,
-          }}
-        >
-          ogimage-api
+          {showWatermark && (
+            <span
+              style={{
+                fontSize: 12,
+                color: muted,
+                fontFamily: "system-ui, sans-serif",
+                marginLeft: 16,
+                opacity: 0.4,
+              }}
+            >
+              ogimage-api
+            </span>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 }
