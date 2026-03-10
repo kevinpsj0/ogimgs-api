@@ -90,6 +90,7 @@ export function minimalTemplate(params: MinimalTemplateParams): string {
 <head>
   <meta charset="utf-8" />
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;900&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { width: ${width}px; height: ${height}px; overflow: hidden; }
   </style>
@@ -104,7 +105,7 @@ export function minimalTemplate(params: MinimalTemplateParams): string {
     width: ${width}px;
     height: ${height}px;
     background-color: ${bg};
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
     overflow: hidden;
   ">
     ${corners}

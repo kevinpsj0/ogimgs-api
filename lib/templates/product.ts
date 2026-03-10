@@ -92,6 +92,7 @@ export function productTemplate(params: ProductTemplateParams): string {
 <head>
   <meta charset="utf-8" />
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,700;0,900;1,400&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { width: ${width}px; height: ${height}px; overflow: hidden; }
   </style>
@@ -104,7 +105,7 @@ export function productTemplate(params: ProductTemplateParams): string {
     width: ${width}px;
     height: ${height}px;
     background: linear-gradient(135deg, #7c3aed 0%, #a855f7 40%, #ec4899 100%);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     padding: 44px 56px;
     overflow: hidden;
   ">
