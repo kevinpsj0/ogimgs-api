@@ -58,7 +58,6 @@ export function defaultTemplate(params: DefaultTemplateParams): string {
 <head>
   <meta charset="utf-8" />
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { width: ${width}px; height: ${height}px; overflow: hidden; }
   </style>
@@ -71,7 +70,7 @@ export function defaultTemplate(params: DefaultTemplateParams): string {
     width: ${width}px;
     height: ${height}px;
     background-color: ${bgColor};
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     overflow: hidden;
   ">
     ${glowCircles}

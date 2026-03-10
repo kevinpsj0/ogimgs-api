@@ -101,7 +101,6 @@ export function blogTemplate(params: BlogTemplateParams): string {
 <head>
   <meta charset="utf-8" />
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Inter:wght@400;500;600;700&display=swap');
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { width: ${width}px; height: ${height}px; overflow: hidden; }
   </style>
@@ -113,7 +112,7 @@ export function blogTemplate(params: BlogTemplateParams): string {
     width: ${width}px;
     height: ${height}px;
     background-color: ${bg};
-    font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    font-family: Georgia, 'Times New Roman', serif;
     box-shadow: 0 20px 60px rgba(0,0,0,0.12);
     overflow: hidden;
   ">
@@ -165,7 +164,7 @@ export function blogTemplate(params: BlogTemplateParams): string {
         color: ${text};
         line-height: 1.12;
         letter-spacing: -0.01em;
-        font-family: 'Playfair Display', Georgia, serif;
+        font-family: Georgia, 'Times New Roman', serif;
       ">${escapeHtml(title)}</h1>
       ${subtitleHtml}
     </div>
