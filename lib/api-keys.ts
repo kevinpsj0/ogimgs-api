@@ -1,90 +1,40 @@
-import { randomBytes } from "crypto";
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
-import { join } from "path";
+import crypto from 'crypto';
 
-const DATA_DIR = join(process.cwd(), "data");
-const KEYS_FILE = join(DATA_DIR, "api-keys.json");
+const SECRET = process.env.API_KEY_SECRET || 'dev-secret-change-in-prod';
 
-export type Tier = "free" | "pro" | "business";
+export type Tier = 'free' | 'starter' | 'growth' | 'scale';
 
-export interface ApiKeyRecord {
-  key: string;
+export interface ApiKeyPayload {
   tier: Tier;
-  email: string;
-  createdAt: string;
-  usageToday: number;
-  lastUsedDate: string;
+  keyId: string;
+  createdAt: number;
+  customerId?: string;
 }
 
-interface KeysStore {
-  keys: Record<string, ApiKeyRecord>;
-}
-
-function ensureDataDir() {
-  if (!existsSync(DATA_DIR)) {
-    mkdirSync(DATA_DIR, { recursive: true });
-  }
-}
-
-function readKeys(): KeysStore {
-  ensureDataDir();
-  if (!existsSync(KEYS_FILE)) {
-    return { keys: {} };
-  }
-  const data = readFileSync(KEYS_FILE, "utf-8");
-  return JSON.parse(data);
-}
-
-function writeKeys(store: KeysStore) {
-  ensureDataDir();
-  writeFileSync(KEYS_FILE, JSON.stringify(store, null, 2));
-}
-
-export function generateApiKey(email: string, tier: Tier = "free"): ApiKeyRecord {
-  const key = `og_${tier}_${randomBytes(24).toString("hex")}`;
-  const record: ApiKeyRecord = {
-    key,
+export function generateApiKey(tier: Tier, customerId?: string): string {
+  const payload: ApiKeyPayload = {
     tier,
-    email,
-    createdAt: new Date().toISOString(),
-    usageToday: 0,
-    lastUsedDate: new Date().toISOString().split("T")[0],
+    keyId: crypto.randomUUID(),
+    createdAt: Date.now(),
+    customerId,
   };
-  const store = readKeys();
-  store.keys[key] = record;
-  writeKeys(store);
-  return record;
+  const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
+  const sig = crypto.createHmac('sha256', SECRET).update(data).digest('base64url');
+  return `ogk_${data}.${sig}`;
 }
 
-export function validateApiKey(key: string): ApiKeyRecord | null {
-  const store = readKeys();
-  return store.keys[key] || null;
-}
-
-export function incrementUsage(key: string): ApiKeyRecord | null {
-  const store = readKeys();
-  const record = store.keys[key];
-  if (!record) return null;
-
-  const today = new Date().toISOString().split("T")[0];
-  if (record.lastUsedDate !== today) {
-    record.usageToday = 0;
-    record.lastUsedDate = today;
-  }
-  record.usageToday++;
-  writeKeys(store);
-  return record;
-}
-
-export function getLimit(tier: Tier): number {
-  switch (tier) {
-    case "free":
-      return 50;
-    case "pro":
-      return 1000;
-    case "business":
-      return 10000;
-    default:
-      return 50;
+export function verifyApiKey(key: string): ApiKeyPayload | null {
+  try {
+    if (!key.startsWith('ogk_')) return null;
+    const rest = key.slice(4);
+    const dotIdx = rest.lastIndexOf('.');
+    if (dotIdx === -1) return null;
+    const data = rest.slice(0, dotIdx);
+    const sig = rest.slice(dotIdx + 1);
+    const expected = crypto.createHmac('sha256', SECRET).update(data).digest('base64url');
+    if (sig !== expected) return null;
+    return JSON.parse(Buffer.from(data, 'base64url').toString());
+  } catch {
+    return null;
   }
 }

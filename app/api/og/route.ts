@@ -137,8 +137,8 @@ export async function GET(request: NextRequest) {
           tier: rateLimit.tier,
           message:
             rateLimit.tier === "free"
-              ? "Upgrade to Pro for 1,000 images/day. Visit /api/keys/generate"
-              : "Daily limit reached. Contact support for higher limits.",
+              ? "Upgrade to Starter for 5,000 images/month. Visit /api/checkout"
+              : "Monthly limit reached. Upgrade your plan for higher limits.",
         },
         { status: 429, headers: CORS_HEADERS }
       );
@@ -156,6 +156,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: "Missing required parameter: title" },
         { status: 400, headers: CORS_HEADERS }
+      );
+    }
+
+    // Enforce template restrictions based on tier
+    const allowedTemplates = rateLimit.allowedTemplates;
+    if (params.template && !allowedTemplates.includes(params.template)) {
+      return NextResponse.json(
+        {
+          error: `Template '${params.template}' requires a paid plan. Upgrade at /api/checkout`,
+          allowedTemplates,
+        },
+        { status: 403, headers: CORS_HEADERS }
       );
     }
 
@@ -191,6 +203,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Missing required parameter: title" },
         { status: 400, headers: CORS_HEADERS }
+      );
+    }
+
+    // Enforce template restrictions based on tier
+    const allowedTemplates = rateLimit.allowedTemplates;
+    if (params.template && !allowedTemplates.includes(params.template)) {
+      return NextResponse.json(
+        {
+          error: `Template '${params.template}' requires a paid plan. Upgrade at /api/checkout`,
+          allowedTemplates,
+        },
+        { status: 403, headers: CORS_HEADERS }
       );
     }
 

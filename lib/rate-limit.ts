@@ -1,67 +1,68 @@
-import { NextRequest } from "next/server";
-import { validateApiKey, incrementUsage, getLimit, type Tier } from "./api-keys";
+import { NextRequest } from 'next/server';
+import { verifyApiKey, type Tier } from './api-keys';
+import { TIER_LIMITS } from './stripe-config';
 
-interface RateLimitResult {
+export interface RateLimitResult {
   allowed: boolean;
   tier: Tier;
-  remaining: number;
   limit: number;
+  remaining?: number;
   showWatermark: boolean;
+  allowedTemplates: string[];
 }
 
-const ipUsage = new Map<string, { count: number; date: string }>();
+// Simple in-memory usage tracker (resets on cold start, good enough for MVP)
+const usageMap = new Map<string, { count: number; resetAt: number }>();
 
 export function checkRateLimit(request: NextRequest): RateLimitResult {
-  const apiKey = request.headers.get("x-api-key") ||
-    request.nextUrl.searchParams.get("api_key");
+  const apiKey = request.headers.get('x-api-key') ||
+    request.nextUrl.searchParams.get('api_key');
 
   if (apiKey) {
-    const record = validateApiKey(apiKey);
-    if (!record) {
-      return { allowed: false, tier: "free", remaining: 0, limit: 0, showWatermark: true };
+    const payload = verifyApiKey(apiKey);
+    if (!payload) {
+      return {
+        allowed: false,
+        tier: 'free',
+        limit: 0,
+        showWatermark: true,
+        allowedTemplates: [],
+      };
     }
-
-    const limit = getLimit(record.tier);
-    const today = new Date().toISOString().split("T")[0];
-    const currentUsage = record.lastUsedDate === today ? record.usageToday : 0;
-
-    if (currentUsage >= limit) {
-      return { allowed: false, tier: record.tier, remaining: 0, limit, showWatermark: record.tier === "free" };
-    }
-
-    const updated = incrementUsage(apiKey);
+    const limits = TIER_LIMITS[payload.tier];
+    // For paid tiers, trust the key (soft limit for MVP)
     return {
       allowed: true,
-      tier: record.tier,
-      remaining: limit - (updated?.usageToday || currentUsage + 1),
-      limit,
-      showWatermark: false,
+      tier: payload.tier,
+      limit: limits.limit,
+      showWatermark: limits.watermark,
+      allowedTemplates: limits.templates,
     };
   }
 
-  // No API key — free tier with IP-based tracking
-  const ip = request.headers.get("x-forwarded-for") ||
-    request.headers.get("x-real-ip") ||
-    "anonymous";
+  // Free tier: IP-based rate limit
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+    request.headers.get('x-real-ip') ||
+    'unknown';
+  const now = Date.now();
+  const resetAt = new Date().setHours(24, 0, 0, 0);
 
-  const today = new Date().toISOString().split("T")[0];
-  const usage = ipUsage.get(ip);
-
-  if (!usage || usage.date !== today) {
-    ipUsage.set(ip, { count: 1, date: today });
-    return { allowed: true, tier: "free", remaining: 49, limit: 50, showWatermark: true };
-  }
-
-  if (usage.count >= 50) {
-    return { allowed: false, tier: "free", remaining: 0, limit: 50, showWatermark: true };
+  const usage = usageMap.get(ip) || { count: 0, resetAt };
+  if (now > usage.resetAt) {
+    usage.count = 0;
+    usage.resetAt = new Date().setHours(24, 0, 0, 0);
   }
 
   usage.count++;
+  usageMap.set(ip, usage);
+
+  const freeLimits = TIER_LIMITS.free;
   return {
-    allowed: true,
-    tier: "free",
-    remaining: 50 - usage.count,
-    limit: 50,
+    allowed: usage.count <= freeLimits.limit,
+    tier: 'free',
+    limit: freeLimits.limit,
+    remaining: Math.max(0, freeLimits.limit - usage.count),
     showWatermark: true,
+    allowedTemplates: freeLimits.templates,
   };
 }
