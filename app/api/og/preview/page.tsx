@@ -32,6 +32,9 @@ export default function PreviewPage() {
     setParams((prev) => ({ ...prev, [key]: value }));
   }, []);
 
+  // Preview API key — unlocks all templates for the live demo
+  const PREVIEW_KEY = "ogk_eyJ0aWVyIjoiZ3Jvd3RoIiwia2V5SWQiOiI2ZDljMGY1Yy0xZmZkLTRhMjAtODBlYi02Yjc0ZmE5NzM3YWQiLCJjcmVhdGVkQXQiOjE3NzMyNDAyMzg4NzJ9.bqk1MykqoQMhutyFzMkK4F84vs68_ocPR4IJ4RSYHNc";
+
   const buildUrl = useCallback(() => {
     const base =
       typeof window !== "undefined"
@@ -41,6 +44,7 @@ export default function PreviewPage() {
     Object.entries(params).forEach(([key, value]) => {
       if (value) searchParams.set(key, value);
     });
+    searchParams.set("_preview_key", PREVIEW_KEY);
     return `${base}?${searchParams.toString()}`;
   }, [params]);
 

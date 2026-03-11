@@ -16,7 +16,8 @@ const usageMap = new Map<string, { count: number; resetAt: number }>();
 
 export function checkRateLimit(request: NextRequest): RateLimitResult {
   const apiKey = request.headers.get('x-api-key') ||
-    request.nextUrl.searchParams.get('api_key');
+    request.nextUrl.searchParams.get('api_key') ||
+    request.nextUrl.searchParams.get('_preview_key');
 
   if (apiKey) {
     const payload = verifyApiKey(apiKey);
