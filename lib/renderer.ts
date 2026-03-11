@@ -31,8 +31,7 @@ export async function renderHtmlToPng(
   const page = await browser.newPage();
   try {
     await page.setViewport({ width, height, deviceScaleFactor: 2 });
-    await page.setContent(html, { waitUntil: "domcontentloaded" });
-    await page.evaluateHandle("document.fonts.ready");
+    await page.setContent(html, { waitUntil: "networkidle0", timeout: 15000 });
     const buffer = await page.screenshot({
       type: "png",
       clip: { x: 0, y: 0, width, height },

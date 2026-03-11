@@ -101,7 +101,7 @@ export function blogTemplate(params: BlogTemplateParams): string {
 <head>
   <meta charset="utf-8" />
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=Inter:wght@400;500;600;700&display=swap');
+    
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { width: ${width}px; height: ${height}px; overflow: hidden; }
   </style>
@@ -217,3 +217,4 @@ export function blogTemplate(params: BlogTemplateParams): string {
 </body>
 </html>`;
 }
+
