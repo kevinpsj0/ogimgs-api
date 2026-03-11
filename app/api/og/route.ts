@@ -1,9 +1,9 @@
-import { ImageResponse } from "@vercel/og";
 import { NextRequest, NextResponse } from "next/server";
-import { DefaultTemplate } from "@/lib/templates/default";
-import { BlogTemplate } from "@/lib/templates/blog";
-import { ProductTemplate } from "@/lib/templates/product";
-import { MinimalTemplate } from "@/lib/templates/minimal";
+import { renderHtmlToPng } from "@/lib/renderer";
+import { defaultTemplate } from "@/lib/templates/default";
+import { blogTemplate } from "@/lib/templates/blog";
+import { productTemplate } from "@/lib/templates/product";
+import { minimalTemplate } from "@/lib/templates/minimal";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
@@ -26,16 +26,22 @@ interface OgParams {
   template?: "default" | "blog" | "product" | "minimal";
   bgColor?: string;
   textColor?: string;
+  accentColor?: string;
   width?: number;
   height?: number;
+  // default
+  domain?: string;
   // blog
   author?: string;
   date?: string;
   readingTime?: string;
+  category?: string;
   // product
   price?: string;
   cta?: string;
   productImage?: string;
+  tagline?: string;
+  // minimal
 }
 
 function parseParams(params: Record<string, string | undefined>): OgParams {
@@ -47,18 +53,22 @@ function parseParams(params: Record<string, string | undefined>): OgParams {
     template: (params.template as OgParams["template"]) || "default",
     bgColor: params.bgColor,
     textColor: params.textColor,
+    accentColor: params.accentColor,
     width: params.width ? Math.min(Math.max(parseInt(params.width), 200), 2400) : 1200,
     height: params.height ? Math.min(Math.max(parseInt(params.height), 200), 1400) : 630,
+    domain: params.domain,
     author: params.author,
     date: params.date,
     readingTime: params.readingTime,
+    category: params.category,
     price: params.price,
     cta: params.cta,
     productImage: params.productImage,
+    tagline: params.tagline,
   };
 }
 
-function renderTemplate(params: OgParams, showWatermark: boolean) {
+function buildHtml(params: OgParams, showWatermark: boolean): string {
   const common = {
     title: params.title,
     subtitle: params.subtitle,
@@ -73,36 +83,43 @@ function renderTemplate(params: OgParams, showWatermark: boolean) {
 
   switch (params.template) {
     case "blog":
-      return (
-        <BlogTemplate
-          {...common}
-          author={params.author}
-          date={params.date}
-          readingTime={params.readingTime}
-        />
-      );
+      return blogTemplate({
+        ...common,
+        author: params.author,
+        date: params.date,
+        readingTime: params.readingTime,
+        category: params.category,
+      });
     case "product":
-      return (
-        <ProductTemplate
-          {...common}
-          price={params.price}
-          cta={params.cta}
-          productImage={params.productImage}
-        />
-      );
+      return productTemplate({
+        ...common,
+        price: params.price,
+        cta: params.cta,
+        productImage: params.productImage,
+        tagline: params.tagline,
+      });
     case "minimal":
-      return <MinimalTemplate {...common} />;
+      return minimalTemplate({
+        ...common,
+        accentColor: params.accentColor,
+      });
     default:
-      return <DefaultTemplate {...common} />;
+      return defaultTemplate({
+        ...common,
+        domain: params.domain,
+      });
   }
 }
 
-function generateImage(params: OgParams, showWatermark: boolean) {
-  return new ImageResponse(renderTemplate(params, showWatermark), {
-    width: params.width,
-    height: params.height,
+async function generateImage(params: OgParams, showWatermark: boolean): Promise<NextResponse> {
+  const html = buildHtml(params, showWatermark);
+  const png = await renderHtmlToPng(html, params.width!, params.height!);
+
+  return new NextResponse(new Uint8Array(png), {
+    status: 200,
     headers: {
       ...CORS_HEADERS,
+      "Content-Type": "image/png",
       "Cache-Control": "public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800",
     },
   });
@@ -118,9 +135,10 @@ export async function GET(request: NextRequest) {
           error: "Rate limit exceeded",
           limit: rateLimit.limit,
           tier: rateLimit.tier,
-          message: rateLimit.tier === "free"
-            ? "Upgrade to Pro for 1,000 images/day. Visit /api/keys/generate"
-            : "Daily limit reached. Contact support for higher limits.",
+          message:
+            rateLimit.tier === "free"
+              ? "Upgrade to Pro for 1,000 images/day. Visit /api/keys/generate"
+              : "Daily limit reached. Contact support for higher limits.",
         },
         { status: 429, headers: CORS_HEADERS }
       );
@@ -141,7 +159,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return generateImage(params, rateLimit.showWatermark);
+    return await generateImage(params, rateLimit.showWatermark);
   } catch (e) {
     const message = e instanceof Error ? e.message : "Internal server error";
     return NextResponse.json(
@@ -176,7 +194,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    return generateImage(params, rateLimit.showWatermark);
+    return await generateImage(params, rateLimit.showWatermark);
   } catch (e) {
     const message = e instanceof Error ? e.message : "Internal server error";
     return NextResponse.json(

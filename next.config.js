@@ -6,6 +6,12 @@ const nextConfig = {
       { protocol: "http", hostname: "**" },
     ],
   },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = [...(config.externals || []), "@sparticuz/chromium-min"];
+    }
+    return config;
+  },
 };
 
 module.exports = nextConfig;
