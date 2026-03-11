@@ -9,6 +9,22 @@ export default function LandingPage() {
 
   const demoUrl = `/api/og?title=${encodeURIComponent(demoTitle)}&template=${demoTemplate}&theme=${demoTheme}&subtitle=${encodeURIComponent("Generate stunning OG images with a single API call")}`;
 
+  async function handleUpgrade(plan: string) {
+    if (plan === 'free') {
+      // Just scroll to docs or show API key info
+      return;
+    }
+    const res = await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.location.href = data.url;
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white">
       {/* Nav */}
@@ -192,51 +208,65 @@ export default function LandingPage() {
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Simple, transparent pricing</h2>
             <p className="text-neutral-400 text-lg">Start free. Scale when you need to.</p>
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[
               {
                 name: "Free",
                 price: "$0",
-                period: "forever",
-                limit: "50 images / day",
+                period: "/mo",
+                planKey: "free",
                 features: [
-                  "All templates",
-                  "Light & dark themes",
-                  "Custom colors",
-                  "Small watermark",
-                  "Community support",
+                  "100 images/month",
+                  "Watermark on all images",
+                  "Default + minimal templates",
+                  "No API key needed",
+                ],
+                cta: "Start Free",
+                highlight: false,
+              },
+              {
+                name: "Starter",
+                price: "$9",
+                period: "/mo",
+                planKey: "starter",
+                features: [
+                  "5,000 images/month",
+                  "No watermark",
+                  "All 4 templates",
+                  "API key provided",
                 ],
                 cta: "Get Started",
                 highlight: false,
               },
               {
-                name: "Pro",
-                price: "$19",
-                period: "/month",
-                limit: "1,000 images / day",
+                name: "Growth",
+                price: "$29",
+                period: "/mo",
+                planKey: "growth",
                 features: [
-                  "Everything in Free",
+                  "25,000 images/month",
                   "No watermark",
-                  "API key access",
-                  "Priority cache",
-                  "Email support",
+                  "All 4 templates",
+                  "API key provided",
+                  "Priority support",
                 ],
-                cta: "Start Pro Trial",
+                cta: "Get Started",
                 highlight: true,
               },
               {
-                name: "Business",
-                price: "$49",
-                period: "/month",
-                limit: "10,000 images / day",
+                name: "Scale",
+                price: "$99",
+                period: "/mo",
+                planKey: "scale",
                 features: [
-                  "Everything in Pro",
-                  "Custom fonts",
-                  "Webhook notifications",
+                  "100,000 images/month",
+                  "No watermark",
+                  "All 4 templates",
+                  "API key provided",
+                  "$2.50/1K overage",
                   "SLA guarantee",
-                  "Priority support",
                 ],
-                cta: "Contact Sales",
+                cta: "Get Started",
                 highlight: false,
               },
             ].map((plan, i) => (
@@ -248,12 +278,16 @@ export default function LandingPage() {
                     : "bg-neutral-900 border-white/10"
                 }`}
               >
+                {plan.highlight && (
+                  <div className="text-xs font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded-full px-3 py-1 inline-block mb-3">
+                    Most Popular
+                  </div>
+                )}
                 <h3 className="text-lg font-semibold mb-1">{plan.name}</h3>
-                <div className="flex items-baseline gap-1 mb-1">
+                <div className="flex items-baseline gap-1 mb-6">
                   <span className="text-4xl font-extrabold">{plan.price}</span>
                   <span className="text-neutral-400 text-sm">{plan.period}</span>
                 </div>
-                <p className="text-sm text-neutral-500 mb-6">{plan.limit}</p>
                 <ul className="space-y-3 mb-8">
                   {plan.features.map((f, j) => (
                     <li key={j} className="text-sm text-neutral-300 flex items-center gap-2">
@@ -265,6 +299,7 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <button
+                  onClick={() => handleUpgrade(plan.planKey)}
                   className={`w-full py-3 rounded-xl text-sm font-semibold transition ${
                     plan.highlight
                       ? "bg-blue-600 hover:bg-blue-700 text-white"
